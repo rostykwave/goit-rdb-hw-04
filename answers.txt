@@ -1,0 +1,203 @@
+p1
+
+CREATE SCHEMA LibraryManagement;
+USE librarymanagement;
+
+CREATE TABLE authors (
+  author_id INT AUTO_INCREMENT PRIMARY KEY,
+  author_name VARCHAR(255)
+);
+
+CREATE TABLE genres (
+  genre_id INT AUTO_INCREMENT PRIMARY KEY,
+  genre_name VARCHAR(255)
+);
+
+CREATE TABLE books (
+    book_id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255),
+    publication_year YEAR,
+    author_id INT,
+    genre_id INT,
+    FOREIGN KEY (author_id) REFERENCES authors(author_id),
+    FOREIGN KEY (genre_id) REFERENCES genres(genre_id)
+);
+
+CREATE TABLE users (
+    user_id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(255),
+    email VARCHAR(255)
+);
+
+CREATE TABLE borrowed_books (
+    borrow_id INT AUTO_INCREMENT PRIMARY KEY,
+    book_id INT,
+    user_id INT,
+    borrow_date DATE,
+    return_date DATE,
+    FOREIGN KEY (book_id) REFERENCES books(book_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
+
+
+
+p2
+
+INSERT INTO authors (author_name) VALUES 
+("Михайло Коцюбинський"),
+("Іван Франко");
+
+INSERT INTO genres (genre_name) VALUES 
+("соціально-побутова повість"),
+("історична повість");
+
+INSERT INTO books (title, publication_year, author_id, genre_id) VALUES 
+("Тіні забутих предків", 1912, 1, 1),
+("Захар Беркут", 1901, 2, 2);
+
+INSERT INTO users (username, email) VALUES 
+("sonya", "sonya@gmail.com"),
+("sofiia", "sofiia@gmail.com");
+
+INSERT INTO borrowed_books (book_id , user_id , borrow_date , return_date ) VALUES 
+(1, 2, "2024-04-05", "2024-04-14"),
+(2, 1, "2024-04-04", "2024-04-13");
+
+p3
+SELECT *
+FROM order_details
+INNER JOIN orders ON orders.id = order_details.order_id
+INNER JOIN customers ON customers.id = orders.customer_id
+INNER JOIN products ON products.id = order_details.product_id
+INNER JOIN categories ON categories.id = products.category_id
+INNER JOIN employees ON employees.employee_id = orders.employee_id
+INNER JOIN shippers ON shippers.id = orders.shipper_id
+INNER JOIN suppliers ON suppliers.id = products.supplier_id;
+
+
+p4.1
+Визначте, скільки рядків ви отримали (за допомогою оператора COUNT).
+
+SELECT COUNT(*) as total_rows
+FROM order_details
+INNER JOIN orders ON orders.id = order_details.order_id
+INNER JOIN customers ON customers.id = orders.customer_id
+INNER JOIN products ON products.id = order_details.product_id
+INNER JOIN categories ON categories.id = products.category_id
+INNER JOIN employees ON employees.employee_id = orders.employee_id
+INNER JOIN shippers ON shippers.id = orders.shipper_id
+INNER JOIN suppliers ON suppliers.id = products.supplier_id;
+
+Result: 518
+
+
+p4.2
+Змініть декілька операторів INNER на LEFT чи RIGHT. Визначте, що відбувається з кількістю рядків. Чому? Напишіть відповідь у текстовому файлі.
+
+SELECT COUNT(*) as total_rows
+FROM order_details
+INNER JOIN orders ON orders.id = order_details.order_id
+LEFT JOIN customers ON customers.id = orders.customer_id
+INNER JOIN products ON products.id = order_details.product_id
+LEFT JOIN categories ON categories.id = products.category_id
+RIGHT JOIN employees ON employees.employee_id = orders.employee_id
+LEFT JOIN shippers ON shippers.id = orders.shipper_id
+INNER JOIN suppliers ON suppliers.id = products.supplier_id;
+
+518
+Кількість рядків не змінюється, бо інші таблиці мають достатню кількість даних, які відповідає всім ключам з таблиці order_details.
+
+
+p4.3
+Оберіть тільки ті рядки, де employee_id > 3 та ≤ 10.
+
+SELECT *
+FROM order_details
+INNER JOIN orders ON orders.id = order_details.order_id
+INNER JOIN customers ON customers.id = orders.customer_id
+INNER JOIN products ON products.id = order_details.product_id
+INNER JOIN categories ON categories.id = products.category_id
+INNER JOIN employees ON employees.employee_id = orders.employee_id
+INNER JOIN shippers ON shippers.id = orders.shipper_id
+INNER JOIN suppliers ON suppliers.id = products.supplier_id
+WHERE orders.employee_id > 3 AND orders.employee_id <=10;
+
+Варіант запиту з додаванням скорочених назв (alias):
+SELECT *
+FROM order_details od
+INNER JOIN orders o ON o.id = od.order_id
+INNER JOIN customers cust ON cust.id = o.customer_id
+INNER JOIN products p ON p.id = od.product_id
+INNER JOIN categories cat ON cat.id = p.category_id
+INNER JOIN employees e ON e.employee_id = o.employee_id
+INNER JOIN shippers sh ON sh.id = o.shipper_id
+INNER JOIN suppliers sup ON sup.id = p.supplier_id
+WHERE o.employee_id > 3 AND o.employee_id <=10;
+
+
+p4.4
+Згрупуйте за іменем категорії, порахуйте кількість рядків у групі, середню кількість товару (кількість товару знаходиться в order_details.quantity)
+
+SELECT AVG(od.quantity) as average_quantity
+FROM order_details od
+INNER JOIN orders o ON o.id = od.order_id
+INNER JOIN customers cust ON cust.id = o.customer_id
+INNER JOIN products p ON p.id = od.product_id
+INNER JOIN categories cat ON cat.id = p.category_id
+INNER JOIN employees e ON e.employee_id = o.employee_id
+INNER JOIN shippers sh ON sh.id = o.shipper_id
+INNER JOIN suppliers sup ON sup.id = p.supplier_id
+GROUP BY cat.name
+
+
+p4.5
+Відфільтруйте рядки, де середня кількість товару більша за 21.
+
+SELECT AVG(od.quantity) as average_quantity
+FROM order_details od
+INNER JOIN orders o ON o.id = od.order_id
+INNER JOIN customers cust ON cust.id = o.customer_id
+INNER JOIN products p ON p.id = od.product_id
+INNER JOIN categories cat ON cat.id = p.category_id
+INNER JOIN employees e ON e.employee_id = o.employee_id
+INNER JOIN shippers sh ON sh.id = o.shipper_id
+INNER JOIN suppliers sup ON sup.id = p.supplier_id
+GROUP BY cat.name
+HAVING average_quantity > 21
+
+
+p4.6
+Відсортуйте рядки за спаданням кількості рядків.
+
+SELECT AVG(od.quantity) as average_quantity
+FROM order_details od
+INNER JOIN orders o ON o.id = od.order_id
+INNER JOIN customers cust ON cust.id = o.customer_id
+INNER JOIN products p ON p.id = od.product_id
+INNER JOIN categories cat ON cat.id = p.category_id
+INNER JOIN employees e ON e.employee_id = o.employee_id
+INNER JOIN shippers sh ON sh.id = o.shipper_id
+INNER JOIN suppliers sup ON sup.id = p.supplier_id
+GROUP BY cat.name
+HAVING average_quantity > 21
+ORDER BY average_quantity desc
+
+
+
+p4.7
+Виведіть на екран (оберіть) чотири рядки з пропущеним першим рядком.
+
+SELECT AVG(od.quantity) as average_quantity
+FROM order_details od
+INNER JOIN orders o ON o.id = od.order_id
+INNER JOIN customers cust ON cust.id = o.customer_id
+INNER JOIN products p ON p.id = od.product_id
+INNER JOIN categories cat ON cat.id = p.category_id
+INNER JOIN employees e ON e.employee_id = o.employee_id
+INNER JOIN shippers sh ON sh.id = o.shipper_id
+INNER JOIN suppliers sup ON sup.id = p.supplier_id
+GROUP BY cat.name
+HAVING average_quantity > 21
+ORDER BY average_quantity desc
+LIMIT 4
+OFFSET 1
